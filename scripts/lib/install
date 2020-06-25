@@ -345,6 +345,9 @@ deploy_type = production
 
 [postgresql]
 version = $POSTGRES_VERSION
+
+[rabbitmq]
+nodename = zulip@localhost
 EOF
 
     if [ -n "$USE_CERTBOT" ]; then
@@ -364,27 +367,8 @@ EOF
         crudini --del /etc/zulip/zulip.conf postgresql
     fi
 
-    # Note: there are four dpkg-query outputs to consider:
-    #
-    # root@host# dpkg-query --showformat '${Status}\n' -W rabbitmq-server 2>/dev/null
-    # root@host# apt install rabbitmq-server
-    # root@host# dpkg-query --showformat '${Status}\n' -W rabbitmq-server 2>/dev/null
-    # install ok installed
-    # root@host# apt remove rabbitmq-server
-    # root@host# dpkg-query --showformat '${Status}\n' -W rabbitmq-server 2>/dev/null
-    # deinstall ok config-files
-    # root@host# apt purge rabbitmq-server
-    # root@host# dpkg-query --showformat '${Status}\n' -W rabbitmq-server 2>/dev/null
-    # unknown ok not-installed
-    #
-    # (There are more possibilities in the case of dpkg errors.)  Here
-    # we are checking for either empty or not-installed.
-    if ! dpkg-query --showformat '${Status}\n' -W rabbitmq-server 2>/dev/null | grep -vq ' not-installed$'; then
-        cat <<EOF >>/etc/zulip/zulip.conf
-
-[rabbitmq]
-nodename = zulip@localhost
-EOF
+    if ! has_class "zulip::rabbit"; then
+        crudini --del /etc/zulip/zulip.conf rabbitmq
     fi
 fi
 

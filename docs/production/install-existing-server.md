@@ -75,7 +75,13 @@ If you have an existing PostgreSQL database, note that Zulip will use
 the default `main` as its database name; make sure you're not using
 that.
 
-### Memcached, redis, and rabbitmq
+### rabbitmq
+
+rabbitmq will configure the `nodename` to be `rabbit@localhost`, in
+order to be resilient to hostname changes.  This will result in a
+change in data storage path for the node, if it had pre-existing data.
+
+### Memcached, redis
 
 Zulip will, by default, configure these services for its use.  The
 configuration we use is pretty basic, but if you're using them for
