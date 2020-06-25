@@ -33,6 +33,7 @@ class zulip::rabbit {
     group   => 'root',
     mode    => '0644',
     source  => 'puppet:///modules/zulip/rabbitmq/rabbitmq-server',
+    notify  => Service[rabbitmq-server],
   }
 
   file { '/etc/rabbitmq/rabbitmq.config':
@@ -42,6 +43,7 @@ class zulip::rabbit {
     group   => 'root',
     mode    => '0644',
     source  => 'puppet:///modules/zulip/rabbitmq/rabbitmq.config',
+    notify  => Service[rabbitmq-server],
   }
 
   $rabbitmq_nodename = zulipconf('rabbitmq', 'nodename', '')
@@ -49,13 +51,14 @@ class zulip::rabbit {
     file { '/etc/rabbitmq/rabbitmq-env.conf':
       ensure  => file,
       require => Package[rabbitmq-server],
-      before  => Service[rabbitmq-server],
       owner   => 'root',
       group   => 'root',
       mode    => '0644',
       content => template('zulip/rabbitmq-env.conf.template.erb'),
+      notify  => Service[rabbitmq-server],
     }
   }
+
   # epmd doesn't have an init script, so we just check if it is
   # running, and if it isn't, start it.  Even in case of a race, this
   # won't leak epmd processes, because epmd checks if one is already
