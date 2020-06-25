@@ -46,17 +46,10 @@ class zulip::rabbit {
 
   $rabbitmq_nodename = zulipconf('rabbitmq', 'nodename', '')
   if $rabbitmq_nodename != '' {
-    file { '/etc/rabbitmq':
-      ensure => 'directory',
-      owner  => 'root',
-      group  => 'root',
-      mode   => '0755',
-    }
-
     file { '/etc/rabbitmq/rabbitmq-env.conf':
       ensure  => file,
-      require => File['/etc/rabbitmq'],
-      before  => [Package[rabbitmq-server], Service[rabbitmq-server]],
+      require => Package[rabbitmq-server],
+      before  => Service[rabbitmq-server],
       owner   => 'root',
       group   => 'root',
       mode    => '0644',
