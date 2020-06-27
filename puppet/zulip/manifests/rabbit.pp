@@ -51,8 +51,8 @@ class zulip::rabbit {
     file { '/etc/rabbitmq/rabbitmq-env.conf':
       ensure  => file,
       require => Package[rabbitmq-server],
-      owner   => 'root',
-      group   => 'root',
+      owner   => 'rabbitmq',
+      group   => 'rabbitmq',
       mode    => '0644',
       content => template('zulip/rabbitmq-env.conf.template.erb'),
       notify  => Service[rabbitmq-server],
