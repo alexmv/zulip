@@ -36,6 +36,9 @@ let col_focus = 1;
 // increased when we add new actions, or rethought if we add optional
 // actions that only appear in some rows.
 const MAX_SELECTABLE_COLS = 4;
+// We don't set a current_focus_element unless we are sure that
+// user is using keyboard to navigate.
+let user_uses_keyboard = false;
 
 function set_default_focus() {
     // If at any point we are confused about the currently
@@ -59,6 +62,9 @@ function set_table_focus(row, col) {
 }
 
 function revive_current_focus() {
+    if (!user_uses_keyboard) {
+        return false;
+    }
     // After re-render, the current_focus_elem is no longer linked
     // to the focused element, this function attempts to revive the
     // link and focus to the element prior to the rerender.
@@ -453,6 +459,8 @@ exports.change_focused_element = function (e, input_key) {
     // returning true will cause the caller to do
     // preventDefault/stopPropagation; false will let the browser
     // handle the key.
+    user_uses_keyboard = true;
+
     const $elem = $(e.target);
 
     if ($("#recent_topics_table").find(":focus").length === 0) {
