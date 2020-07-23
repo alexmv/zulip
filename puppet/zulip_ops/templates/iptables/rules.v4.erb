@@ -53,6 +53,8 @@
 
 #                       Prometheus node_exporter
 -A INPUT -p tcp --dport 9100       -j ACCEPT
+#                       Grafana, behind ELB
+-A INPUT -p tcp --dport 3000 -j ACCEPT
 <% end -%>
 
 # Drop everything else
