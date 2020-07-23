@@ -50,6 +50,9 @@
 
 #                       statsd
 -A INPUT -p udp --dport 8125       -j ACCEPT
+
+#                       Prometheus node_exporter
+-A INPUT -p tcp --dport 9100       -j ACCEPT
 <% end -%>
 
 # Drop everything else
