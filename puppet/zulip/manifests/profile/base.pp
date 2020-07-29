@@ -109,7 +109,7 @@ class zulip::profile::base {
     mode   => '0640',
     owner  => 'root',
     group  => 'root',
-    source => 'puppet:///modules/zulip/limits.conf',
+    source => 'puppet:///modules/zulip/security/limits.conf',
   }
 
   # This directory is written to by cron jobs for reading by Nagios
