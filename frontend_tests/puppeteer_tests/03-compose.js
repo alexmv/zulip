@@ -140,7 +140,7 @@ async function test_send_multirecipient_pm_from_cordelia_pm_narrow(page) {
     });
 
     // Go back to all messages view and make sure all messages are loaded.
-    await page.keyboard.press("Escape");
+    await page.click(".top_left_all_messages");
 
     await page.waitForSelector("#zhome .message_row", {visible: true});
     await page.waitForFunction((selector) => $(selector).length !== 0, {}, pm_selector);

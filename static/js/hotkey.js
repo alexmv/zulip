@@ -268,7 +268,7 @@ exports.process_escape_key = function (e) {
         return true;
     }
 
-    hashchange.go_to_location("");
+    hashchange.go_to_location("recent_topics");
     return true;
 };
 
