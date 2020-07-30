@@ -452,6 +452,8 @@ exports.show = function () {
     // a messages narrow. We hide it and show recent topics.
     $("#message_feed_container").hide();
     $("#recent_topics_view").show();
+    $("#message_view_header_underpadding").hide();
+    $(".header").css("padding-bottom", "0px");
 
     // Save text in compose box if open.
     drafts.update_draft();
@@ -476,6 +478,8 @@ function filter_buttons() {
 exports.hide = function () {
     $("#message_feed_container").show();
     $("#recent_topics_view").hide();
+    $("#message_view_header_underpadding").show();
+    $(".header").css("padding-bottom", "10px");
 
     // This solves a bug with message_view_header
     // being broken sometimes when we narrow
