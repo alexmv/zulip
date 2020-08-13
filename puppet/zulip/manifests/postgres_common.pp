@@ -1,5 +1,7 @@
 class zulip::postgres_common {
   include zulip::common
+  # Not 'require', not 'include', forcing ssl certs to have been configured first
+  require zulip::ssl_cert
   case $::osfamily {
     'debian': {
       $postgresql = "postgresql-${zulip::base::postgres_version}"
@@ -8,18 +10,12 @@ class zulip::postgres_common {
         $postgresql,
         # tools for database monitoring; formerly ptop
         'pgtop',
-        # Needed just to support adding postgres user to 'zulip' group
-        'ssl-cert',
         # our dictionary
         'hunspell-en-us',
         # Postgres Nagios check plugin
         'check-postgres',
         # Python modules used in our monitoring/worker threads
         'python3-dateutil', # TODO: use a virtualenv instead
-      ]
-      $postgres_user_reqs = [
-        Package[$postgresql],
-        Package['ssl-cert'],
       ]
     }
     'redhat': {
@@ -39,20 +35,6 @@ class zulip::postgres_common {
       exec {'pip3_deps':
         command => 'python3 -m pip install python-dateutil',
       }
-      group { 'ssl-cert':
-        ensure => present,
-      }
-      # allows ssl-cert group to read /etc/pki/tls/private
-      file { '/etc/pki/tls/private':
-        ensure => 'directory',
-        mode   => '0640',
-        owner  => 'root',
-        group  => 'ssl-cert',
-      }
-      $postgres_user_reqs = [
-        Package[$postgresql],
-        Group['ssl-cert'],
-      ]
     }
     default: {
       fail('osfamily not supported')
@@ -75,7 +57,7 @@ class zulip::postgres_common {
   @user { 'postgres':
     groups     => ['ssl-cert'],
     membership => minimum,
-    require    => $postgres_user_reqs,
+    require    => Package[$postgresql],
   }
   User <| title == postgres |> { groups +> 'zulip' }
 }

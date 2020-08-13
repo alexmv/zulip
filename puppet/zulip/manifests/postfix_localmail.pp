@@ -1,4 +1,5 @@
 class zulip::postfix_localmail {
+  require zulip::ssl_cert
   $postfix_packages = [ 'postfix', ]
 
   if $::fqdn == '' {
