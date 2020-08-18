@@ -16,7 +16,7 @@ from typing import (
 import orjson
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.http import HttpRequest, HttpResponse
 from django.utils.translation import override as override_language
 from django.utils.translation import ugettext as _
@@ -471,8 +471,17 @@ def add_subscriptions_backend(
     else:
         subscribers = {user_profile}
 
-    (subscribed, already_subscribed) = bulk_add_subscriptions(streams, subscribers,
-                                                              acting_user=user_profile, color_map=color_map)
+    try:
+        (subscribed, already_subscribed) = bulk_add_subscriptions(
+            streams,
+            subscribers,
+            acting_user=user_profile,
+            color_map=color_map
+        )
+    except IntegrityError:
+        # We can race with ourselves in subscribing, which will hit a
+        # unique constraint violation in the DB.
+        return json_error(_("Duplicate stream subscription"))
 
     # We can assume unique emails here for now, but we should eventually
     # convert this function to be more id-centric.

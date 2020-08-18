@@ -2844,12 +2844,22 @@ def bulk_add_subscriptions(streams: Iterable[Stream],
 
     # TODO: XXX: This transaction really needs to be done at the serializeable
     # transaction isolation level.
-    with transaction.atomic():
-        occupied_streams_before = list(get_occupied_streams(realm))
-        Subscription.objects.bulk_create([sub for (sub, stream) in subs_to_add])
-        sub_ids = [sub.id for (sub, stream) in subs_to_activate]
-        Subscription.objects.filter(id__in=sub_ids).update(active=True)
-        occupied_streams_after = list(get_occupied_streams(realm))
+    try:
+        with transaction.atomic():
+            occupied_streams_before = list(get_occupied_streams(realm))
+            Subscription.objects.bulk_create([sub for (sub, stream) in subs_to_add])
+            sub_ids = [sub.id for (sub, stream) in subs_to_activate]
+            Subscription.objects.filter(id__in=sub_ids).update(active=True)
+            occupied_streams_after = list(get_occupied_streams(realm))
+    except IntegrityError:
+        if len(subs_to_add) > 1:
+            raise
+        # With only 1 subscription, the integrity violation means
+        # that that row already existed, which means that we have
+        # reached the desired state.
+        (sub, stream) = subs_to_add[0]
+        already_subscribed.append((sub.user_profile, stream))
+        return ([], already_subscribed)
 
     # Log Subscription Activities in RealmAuditLog
     event_time = timezone_now()
