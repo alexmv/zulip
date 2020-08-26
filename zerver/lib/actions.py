@@ -1469,6 +1469,9 @@ def do_send_messages(messages_maybe_none: Sequence[Optional[MutableMapping[str, 
         # code block).
         if message['message'].mentions_wildcard:
             message['wildcard_mention_user_ids'] = info['wildcard_mention_user_ids']
+
+            # TODO: Add error handling, conditional, etc.
+            raise JsonableError(_("Wildcard mentions not allowed."))
         else:
             message['wildcard_mention_user_ids'] = []
 
