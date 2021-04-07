@@ -2,33 +2,16 @@
 set -e
 
 usage() {
-    echo "usage: install -r RELEASE {TARBALL|DIR} [...installer opts..]" >&2
+    echo "usage: install RELEASE [...installer opts..]" >&2
     exit 1
 }
 
-args="$(getopt -o +r: --long help,release: -- "$@")"
-eval "set -- $args"
-while true; do
-    case "$1" in
-        --help) usage ;;
-        -r | --release)
-            RELEASE="$2"
-            shift
-            shift
-            ;;
-        --)
-            shift
-            break
-            ;;
-        *) usage ;;
-    esac
-done
-INSTALLER="$1"
+RELEASE="$1"
 shift || usage
-INSTALLER_ARGS=("$@")
-set --
 
-if [ -z "$RELEASE" ] || [ -z "$INSTALLER" ]; then
+INSTALLER_ARGS=("$@")
+
+if [ -z "$RELEASE" ]; then
     usage
 fi
 
@@ -40,6 +23,7 @@ fi
 set -x
 
 THIS_DIR="$(dirname "$(readlink -f "$0")")"
+REPO_ROOT="$(dirname "$(dirname "$THIS_DIR")")"
 
 BASE_CONTAINER_NAME=zulip-install-"$RELEASE"-base
 if ! lxc-info -n "$BASE_CONTAINER_NAME" >/dev/null 2>&1; then
@@ -56,29 +40,19 @@ message="$(
 
 Container:
   sudo lxc-attach --clear-env -n $CONTAINER_NAME
-
-Unpacked tree:
-  sudo ls $shared_dir/mnt/zulip-server
 EOF
 )"
 trap 'set +x; echo "$message"' EXIT
 
-if [ -d "$INSTALLER" ]; then
-    installer_dir="$(readlink -f "$INSTALLER")"
-else
-    installer_dir="$(mktemp -d --tmpdir zulip-server-XXXXX)"
-    tar -xf "$INSTALLER" -C "$installer_dir" --transform='s,^[^/]*,zulip-server,'
-fi
-
 mkdir -p /srv/zulip/test-install/pip-cache
 
-mkdir "$shared_dir"/upper "$shared_dir"/work "$shared_dir"/mnt
+mkdir -p "$shared_dir"/upper "$shared_dir"/work "$shared_dir"/mnt/src/zulip-server
 mount -t overlay overlay \
-    -o lowerdir="$installer_dir",upperdir="$shared_dir"/upper,workdir="$shared_dir"/work \
-    "$shared_dir"/mnt
+    -o lowerdir="$REPO_ROOT",upperdir="$shared_dir"/upper,workdir="$shared_dir"/work \
+    "$shared_dir"/mnt/src/zulip-server
 
 lxc-copy --ephemeral --keepdata -n "$BASE_CONTAINER_NAME" -N "$CONTAINER_NAME" \
-    -m bind="$shared_dir"/mnt:/mnt/src/,bind=/srv/zulip/test-install/pip-cache:/root/.cache/pip
+    -m bind="$shared_dir"/mnt:/mnt,bind=/srv/zulip/test-install/pip-cache:/root/.cache/pip
 
 "$THIS_DIR"/lxc-wait -n "$CONTAINER_NAME"
 
