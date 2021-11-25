@@ -20,17 +20,27 @@ sudo apt-get -y install rabbitmq-server
 sudo service postgresql start
 
 # Starting the rabbitmq-server
+sleep 5
+sudo service rabbitmq-server status || true
+date -u
 if ! sudo service rabbitmq-server start; then
+    sleep 5
+    ls -alsR /var/log/rabbitmq/
+    find /var/log/rabbitmq/ -type f -print0 | xargs -0 cat
     echo
     echo "Starting rabbitmq-server failed. Trying again:"
     sudo service rabbitmq-server start
 fi
+sleep 5
+ls -alsR /var/log/rabbitmq/
+find /var/log/rabbitmq/ -type f -print0 | xargs -0 cat
 
 # Reconfigure Rabbitmq auth and queues
 sudo /home/zulip/deployments/current/scripts/setup/configure-rabbitmq
 
 # Start the supervisor
 sudo service supervisor start
+cat /var/log/supervisor/supervisord.log
 
 # Zulip releases before 2.1.8/3.5/4.4 have a bug in their
 # `upgrade-zulip` scripts, resulting in them exiting with status 0
