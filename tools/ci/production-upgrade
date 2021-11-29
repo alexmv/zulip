@@ -11,10 +11,8 @@ set -x
 # need to do some preparatory steps. It is a goal to delete these
 # steps.
 
-# Reinstall rabbitmq-server.
-#
-# * For rabbitmq-server, we likely need to do this to work around the
-# hostname changing on reboot causing RabbitMQ to not boot.
+# Reinstall rabbitmq-server; the hostname has changed, so the node
+# identity has changed.
 sudo apt-get -y purge rabbitmq-server
 sudo apt-get -y install rabbitmq-server
 
@@ -27,6 +25,9 @@ if ! sudo service rabbitmq-server start; then
     echo "Starting rabbitmq-server failed. Trying again:"
     sudo service rabbitmq-server start
 fi
+
+# Reconfigure Rabbitmq auth and queues
+sudo /home/zulip/deployments/current/scripts/setup/configure-rabbitmq
 
 # Start the supervisor
 sudo service supervisor start
