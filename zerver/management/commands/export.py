@@ -199,6 +199,10 @@ class Command(ZulipBaseCommand):
         if options["deactivate_realm"]:
             print(f"\033[94mDeactivating realm\033[0m: {realm.string_id}")
             do_deactivate_realm(realm, acting_user=None)
+            # We edit this realm object (but don't save it!) to mark it as
+            # active, so that it always gets written out as active, and thus
+            # gets imported as active.
+            realm.deactivated = False
 
         def percent_callback(bytes_transferred: Any) -> None:
             print(end=".", flush=True)
