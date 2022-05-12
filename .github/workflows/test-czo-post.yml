@@ -1,0 +1,16 @@
+name: Test post to CZO
+on: [push]
+jobs:
+  test-czo-post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Post to CZO
+        env:
+          ZULIP_API_KEY: ${{ secrets.ONE_CLICK_ACTION_ZULIP_BOT_API_KEY }}
+          ZULIP_EMAIL: ${{ secrets.ONE_CLICK_ACTION_ZULIP_BOT_EMAIL }}
+          ZULIP_SITE: https://chat.zulip.org
+          ONE_CLICK_ACTION_STREAM: test here
+        run: |
+          pip3 install zulip rich
+          python3 tools/oneclickapps/test-czo-post.py
