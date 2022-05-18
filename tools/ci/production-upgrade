@@ -15,27 +15,55 @@ set -x
 #
 # * For rabbitmq-server, we likely need to do this to work around the
 # hostname changing on reboot causing RabbitMQ to not boot.
+hostname
 sudo apt-get -y purge rabbitmq-server
+#sudo apt-get update
+#sudo rm -rf /var/run/rabbitmq/pid
+#sudo rm -rf /var/lib/rabbitmq
 sudo apt-get -y install rabbitmq-server
 
-# Start the postgresql service.
-sudo service postgresql start
-
 # Starting the rabbitmq-server
+ps faux
+
+#sudo apt-get install strace
+#sudo mkdir /strace-logs
+#sudo chmod 777 /strace-logs
+
+ls /var/run/rabbitmq/pid || true
+cat /var/run/rabbitmq/pid || true
+
+FAILED=0
 if ! sudo service rabbitmq-server start; then
-    echo
-    echo "Starting rabbitmq-server failed. Trying again:"
-    sudo service rabbitmq-server start
+    FAILED=1
 fi
 
-# Start the supervisor
-sudo service supervisor start
+set +x
 
-# Zulip releases before 2.1.8/3.5/4.4 have a bug in their
-# `upgrade-zulip` scripts, resulting in them exiting with status 0
-# unconditionally. We work around that by running
-# scripts/lib/upgrade-zulip instead.
-UPGRADE_SCRIPT=/home/zulip/deployments/current/scripts/lib/upgrade-zulip
+echo '--- pidfile'
+ls /var/run/rabbitmq/pid || true
+cat /var/run/rabbitmq/pid || true
 
-# Execute the upgrade.
-sudo "$UPGRADE_SCRIPT" /tmp/zulip-server-test.tar.gz
+echo '--- /var/run ls:'
+ls -l /var/run/ || true
+echo '--- /var/run/rabbitmq ls:'
+ls -l /var/run/rabbitmq || true
+echo '--- /var/log ls:'
+ls -lrt /var/log
+echo '--- rabbitmq log ls:'
+ls -lrt /var/log/rabbitmq || true
+echo '--- our log ls:'
+ls -lrt /strace-logs || true
+echo '--- log'
+cat /var/log/rabbitmq/startup_log || true
+echo '--- err'
+cat /var/log/rabbitmq/startup_err || true
+echo '--- ps faux'
+ps faux
+echo '--- end'
+
+/usr/sbin/rabbitmqctl stop /var/run/rabbitmq/pid || true
+
+cd /
+sudo tar czf strace-logs.tar.gz strace-logs/* || true
+
+exit "$FAILED"
