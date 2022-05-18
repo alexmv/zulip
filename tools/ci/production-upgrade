@@ -20,14 +20,15 @@ sudo apt-get -y install rabbitmq-server
 
 # Remove the stale PID file from the image, or its existence can race
 # with the real PID getting written into it.
-sudo rm /var/run/rabbitmq/pid
+sudo cat /var/run/rabbitmq/pid
 
 # Start the postgresql service.
 sudo service postgresql start
 
-FAILED=0
 if ! sudo service rabbitmq-server start; then
     FAILED=1
+else
+    FAILED=0
 fi
 
 set +x
