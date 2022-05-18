@@ -20,7 +20,7 @@ sudo apt-get -y install rabbitmq-server
 
 # Remove the stale PID file from the image, or its existence can race
 # with the real PID getting written into it.
-sudo cat /var/run/rabbitmq/pid
+sudo perl -pi -e 's! >/dev/null 2>&1!!' /etc/init.d/rabbitmq-server
 
 # Start the postgresql service.
 sudo service postgresql start
@@ -32,7 +32,7 @@ else
 fi
 
 set +x
-
+cat /etc/init.d/rabbitmq-server
 echo '--- PID file was 341'
 echo '--- hostname'
 hostname
