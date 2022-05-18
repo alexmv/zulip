@@ -22,6 +22,9 @@ sudo apt-get -y purge rabbitmq-server
 #sudo rm -rf /var/lib/rabbitmq
 sudo apt-get -y install rabbitmq-server
 
+# Start the postgresql service.
+sudo service postgresql start
+
 # Starting the rabbitmq-server
 ps faux
 
