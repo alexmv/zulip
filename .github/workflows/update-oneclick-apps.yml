@@ -2,6 +2,7 @@ name: Update one click apps
 on:
   release:
     types: [published]
+  push: {}
 jobs:
   update-digitalocean-oneclick-app:
     runs-on: ubuntu-latest
@@ -15,7 +16,7 @@ jobs:
           ZULIP_SITE: https://chat.zulip.org
           ONE_CLICK_ACTION_STREAM: kandra ops
           PYTHON_DIGITALOCEAN_REQUEST_TIMEOUT_SEC: 30
-          RELEASE_VERSION: ${{ github.event.release.tag_name }}
+          RELEASE_VERSION: 5.2
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           git clone https://github.com/zulip/marketplace-partners
