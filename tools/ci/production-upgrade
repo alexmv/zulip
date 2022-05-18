@@ -16,6 +16,7 @@ set -x
 # * For rabbitmq-server, we likely need to do this to work around the
 # hostname changing on reboot causing RabbitMQ to not boot.
 sudo apt-get -y purge rabbitmq-server
+cat /dev/null
 sudo apt-get -y install rabbitmq-server
 
 # Start the postgresql service.
