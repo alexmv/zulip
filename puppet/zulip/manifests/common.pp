@@ -111,7 +111,7 @@ class zulip::common {
       'sha256' => {
         'amd64'   => '52503649649c0be00e74e8347c504574582b95ad428ff13172d658e82b3da1b5',
         'aarch64' => 'b377e673558bd0d51f5f771c2b3b3be44b60fcac0689709f47d8c7ca8136f6f5',
-      }
+      },
     },
 
     # https://prometheus.io/download/#prometheus
@@ -129,6 +129,15 @@ class zulip::common {
       'sha256' => {
         'amd64'   => 'c4d0554a378151eab3372235c40d3a9c8c40fd6f40d91d768830985df8a44744',
         'aarch64' => '742047d938192894979c8370830891bb0fea3262b762e6c51c849a8e47ddfb7e',
+      },
+    },
+
+    # https://github.com/prometheus/statsd_exporter/releases
+    'statsd_exporter' => {
+      'version' => '0.22.5',
+      'sha256' => {
+        'amd64'   => 'b04a25fe937a2e74dab097d589bd1f4da9e874d62b166c4e74d5d55b0f58eab6',
+        'aarch64' => 'a7393bb7f4078e2db3def2ed305dec2be33abf7b9b0b0613c5d965c8b30617df',
       },
     },
 
