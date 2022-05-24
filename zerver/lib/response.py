@@ -42,7 +42,11 @@ def json_method_not_allowed(methods: List[str]) -> HttpResponseNotAllowed:
 
 
 def json_response(
-    res_type: str = "success", msg: str = "", data: Mapping[str, Any] = {}, status: int = 200
+    res_type: str = "success",
+    msg: str = "",
+    data: Mapping[str, Any] = {},
+    status: int = 200,
+    headers: Optional[Mapping[str, str]] = None,
 ) -> HttpResponse:
     content = {"result": res_type, "msg": msg}
     content.update(data)
@@ -57,11 +61,14 @@ def json_response(
         ),
         content_type="application/json",
         status=status,
+        headers=headers,
     )
 
 
-def json_success(request: HttpRequest, data: Mapping[str, Any] = {}) -> HttpResponse:
-    return json_response(data=data)
+def json_success(
+    request: HttpRequest, data: Mapping[str, Any] = {}, headers: Optional[Mapping[str, str]] = None
+) -> HttpResponse:
+    return json_response(data=data, headers=headers)
 
 
 def json_response_from_error(exception: JsonableError) -> HttpResponse:
