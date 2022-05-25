@@ -31,6 +31,10 @@ def in_tornado_thread(f: Callable[[], T]) -> T:
     return async_to_sync(wrapped)()
 
 
+def health(request: HttpRequest) -> HttpResponse:
+    return json_success(request)
+
+
 @internal_notify_view(True)
 def notify(request: HttpRequest) -> HttpResponse:
     in_tornado_thread(lambda: process_notification(orjson.loads(request.POST["data"])))

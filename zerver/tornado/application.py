@@ -17,6 +17,7 @@ def create_tornado_application() -> tornado.web.Application:
         r"/json/events",
         r"/api/v1/events",
         r"/api/v1/events/internal",
+        r"/health",
     )
 
     return tornado.web.Application(
