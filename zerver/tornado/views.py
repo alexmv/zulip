@@ -54,7 +54,7 @@ def cleanup_event_queue(
     assert log_data is not None
     log_data["extra"] = f"[{queue_id}]"
     in_tornado_thread(client.cleanup)
-    return json_success(request)
+    return json_success(request, headers={"x-tornado-queue-id": queue_id})
 
 
 @internal_notify_view(True)
@@ -181,4 +181,10 @@ def get_events_backend(
         return AsynchronousResponse()
     if result["type"] == "error":
         raise result["exception"]
-    return json_success(request, data=result["response"])
+
+    headers = {}
+    if queue_id:
+        headers["x-tornado-queue-id"] = queue_id
+    elif result["response"].get("queue_id") is not None:
+        headers["x-tornado-queue-id"] = result["response"]["queue_id"]
+    return json_success(request, data=result["response"], headers=headers)
