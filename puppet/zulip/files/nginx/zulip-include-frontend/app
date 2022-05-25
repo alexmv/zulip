@@ -29,7 +29,7 @@ location /static/webpack-bundles/ {
 
 # Send longpoll requests to Tornado
 location /json/events {
-    proxy_pass $tornado_server;
+    proxy_pass http://kansas;
     include /etc/nginx/zulip-include/proxy_longpolling;
 }
 
@@ -41,7 +41,7 @@ location /api/v1/events {
         return 204;
     }
 
-    proxy_pass $tornado_server;
+    proxy_pass http://kansas;
     include /etc/nginx/zulip-include/proxy_longpolling;
 }
 

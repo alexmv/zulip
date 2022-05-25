@@ -177,6 +177,7 @@ def send_event(
 ) -> None:
     """`users` is a list of user IDs, or in some special cases like message
     send/update or embeds, dictionaries containing extra data."""
+    # XXX All tornado ports for this realm, not the canonical one
     port = get_tornado_port(realm)
     queue_json_publish(
         notify_tornado_queue_name(port),

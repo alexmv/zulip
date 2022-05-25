@@ -16,8 +16,7 @@ def get_tornado_port(realm: Realm) -> int:
 
 
 def get_tornado_uri(realm: Realm) -> str:
-    port = get_tornado_port(realm)
-    return f"http://127.0.0.1:{port}"
+    return "http://127.0.0.1:9799"
 
 
 def notify_tornado_queue_name(port: int) -> str:
