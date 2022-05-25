@@ -101,7 +101,13 @@ def request_event_queue(
     if event_types is not None:
         req["event_types"] = orjson.dumps(event_types)
 
-    resp = requests_client().post(tornado_uri + "/api/v1/events/internal", data=req)
+    resp = requests_client().post(
+        tornado_uri + "/api/v1/events/internal",
+        data=req,
+        headers={
+            "x-tornado-shard": str(get_tornado_port(user_profile.realm)),
+        },
+    )
     return resp.json()["queue_id"]
 
 
@@ -120,7 +126,13 @@ def get_user_events(
         "secret": settings.SHARED_SECRET,
         "client": "internal",
     }
-    resp = requests_client().post(tornado_uri + "/api/v1/events/internal", data=post_data)
+    resp = requests_client().post(
+        tornado_uri + "/api/v1/events/internal",
+        data=post_data,
+        headers={
+            "x-tornado-shard": str(get_tornado_port(user_profile.realm)),
+        },
+    )
     return resp.json()["events"]
 
 
@@ -143,6 +155,10 @@ def send_notification_http(realm: Realm, data: Mapping[str, Any]) -> None:
         requests_client().post(
             tornado_uri + "/notify_tornado",
             data=dict(data=orjson.dumps(data), secret=settings.SHARED_SECRET),
+            # XXX ???
+            headers={
+                "x-tornado-shard": str(get_tornado_port(realm)),
+            },
         )
 
 
