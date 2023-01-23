@@ -46,7 +46,7 @@ up-to-date list of all changes.
   [full S3 bucket policy](../production/upload-backends.html#s3-bucket-policy)
   for avatar and uploads buckets.
 - Clarified what the `--email` value passed to the installer will be used for.
-- Hid harmless "non-existant database" warnings during initial installation.
+- Hid harmless "non-existent database" warnings during initial installation.
 - Forced a known locale when upgrading PostgreSQL, which avoids errors when
   using some terminal applications.
 - Verified that PostgreSQL was running after upgrading it, in case a previous
