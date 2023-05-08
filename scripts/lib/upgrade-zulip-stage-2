@@ -515,8 +515,15 @@ else:
         # Puppet may adjust random services; to minimize risk of issues
         # due to inconsistent state, we shut down the server first.
         shutdown_server()
+        subprocess.run(["ps", "faux"])
+        logging.info("epmd -names")
+        subprocess.run(["epmd", "-names"])
+        logging.info("cat /var/log/rabbitmq/startup_log")
+        subprocess.run(["cat", "/var/log/rabbitmq/startup_log"])
+        logging.info("cat /var/log/rabbitmq/startup_err")
+        subprocess.run(["cat", "/var/log/rabbitmq/startup_err"])
         logging.info("Applying Puppet changes...")
-        subprocess.check_call(["./scripts/zulip-puppet-apply", "--force"])
+        subprocess.check_call(["./scripts/zulip-puppet-apply", "--force", "--debug"])
         subprocess.check_call(["apt-get", "-y", "--with-new-pkgs", "upgrade"])
         # Puppet may have reloaded supervisor, and in so doing started
         # services; mark as potentially needing to stop the server.

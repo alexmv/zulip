@@ -25,5 +25,20 @@ sudo service supervisor start
 # scripts/lib/upgrade-zulip instead.
 UPGRADE_SCRIPT=/home/zulip/deployments/current/scripts/lib/upgrade-zulip
 
+sleep 10
+ps -faux
+epmd -names || true
+ls -l /var/log/rabbitmq
+cat /var/log/rabbitmq/startup_log || true
+cat /var/log/rabbitmq/startup_err || true
+
 # Execute the upgrade.
-sudo "$UPGRADE_SCRIPT" /tmp/zulip-server-test.tar.gz
+sudo "$UPGRADE_SCRIPT" /tmp/zulip-server-test.tar.gz || (
+    ps -faux
+    epmd -names || true
+    ls -l /var/log/rabbitmq
+    cat /var/log/rabbitmq/startup_log || true
+    cat /var/log/rabbitmq/startup_err || true
+
+    exit 1
+)
