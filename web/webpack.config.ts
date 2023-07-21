@@ -156,7 +156,7 @@ export default (
                 },
                 // load fonts and files
                 {
-                    test: /\.(eot|jpg|svg|ttf|otf|png|woff2?)$/,
+                    test: /\.(eot|jpg|svg|ttf|otf|png|woff2?|ogg|mp3)$/,
                     type: "asset/resource",
                 },
             ],

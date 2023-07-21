@@ -1,3 +1,5 @@
+/* eslint-env commonjs */
+
 import $ from "jquery";
 
 import render_message_sent_banner from "../templates/compose_banner/message_sent_banner.hbs";
@@ -83,13 +85,14 @@ export function initialize({on_click_scroll_to_selected}) {
 
 export function update_notification_sound_source(container_elem, settings_object) {
     const notification_sound = settings_object.notification_sound;
-    const audio_file_without_extension = "/static/audio/notification_sounds/" + notification_sound;
-    container_elem
-        .find(".notification-sound-source-ogg")
-        .attr("src", `${audio_file_without_extension}.ogg`);
-    container_elem
-        .find(".notification-sound-source-mp3")
-        .attr("src", `${audio_file_without_extension}.mp3`);
+    const ogg_file = require("../../static/audio/notification_sounds/" +
+        notification_sound +
+        ".ogg");
+    const mp3_file = require("../../static/audio/notification_sounds/" +
+        notification_sound +
+        ".mp3");
+    container_elem.find(".notification-sound-source-ogg").attr("src", ogg_file);
+    container_elem.find(".notification-sound-source-mp3").attr("src", mp3_file);
 
     if (notification_sound !== "none") {
         // Load it so that it is ready to be played; without this the old sound
