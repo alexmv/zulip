@@ -9,6 +9,7 @@ from typing import IO
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
+from scripts.lib.supervisor import list_supervisor_processes
 from scripts.lib.zulip_tools import assert_running_as_root, get_postgres_pwent, run, su_to_zulip
 
 POSTGRES_PWENT = get_postgres_pwent()
@@ -152,6 +153,11 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
             # originally installed without the restored copy of that
             # file.
             run([os.path.join(settings.DEPLOY_ROOT, "scripts", "zulip-puppet-apply"), "-f"])
+
+            # We restart camo if it is installed, since the camo key may have changed.
+            running_camo = list_supervisor_processes(["go-camo"])
+            if running_camo:
+                subprocess.check_call(["supervisorctl", "restart", "go-camo"])
 
         # Now, restore the the database backup using pg_restore.  This
         # needs to run after zulip-puppet-apply to ensure full-text
