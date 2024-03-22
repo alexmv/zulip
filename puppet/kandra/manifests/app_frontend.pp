@@ -1,4 +1,4 @@
-class kandra::app_frontend {
+class kandra::app_frontend inherits kandra::profile::base {
   include zulip::app_frontend_base
   include zulip::profile::memcached
   include zulip::profile::rabbitmq
@@ -49,6 +49,13 @@ class kandra::app_frontend {
     owner   => 'nagios',
     group   => 'nagios',
     content => zulipsecret('secrets', 'redis_password', ''),
+  }
+
+  $zephyr_mirror_host = zulipconf('zephyr', 'personal_mirror_host', '')
+  if $zephyr_mirror_host != ''{
+    Kandra::User_Dotfiles['zulip'] {
+      known_hosts     => ['github.com', $zephyr_mirror_host],
+    }
   }
 
   # Mount /etc/zulip/well-known/ as /.well-known/

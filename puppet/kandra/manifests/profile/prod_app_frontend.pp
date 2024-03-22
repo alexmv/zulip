@@ -1,5 +1,4 @@
-class kandra::profile::prod_app_frontend inherits kandra::profile::base {
-  include kandra::app_frontend
+class kandra::profile::prod_app_frontend inherits kandra::app_frontend {
   include zulip::hooks::zulip_notify
 
   Kandra::User_Dotfiles['root'] {

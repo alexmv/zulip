@@ -1,6 +1,4 @@
-class kandra::profile::staging_app_frontend inherits kandra::profile::base {
-
-  include kandra::app_frontend
+class kandra::profile::staging_app_frontend inherits kandra::app_frontend {
 
   file { '/etc/nginx/sites-available/zulip-staging':
     ensure  => file,

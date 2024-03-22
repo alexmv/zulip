@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from copy import deepcopy
-from typing import Any, Dict, Final, List, Literal, Tuple, Union
+from typing import Any, Dict, Final, List, Literal, Optional, Tuple, Union
 from urllib.parse import urljoin
 
 from scripts.lib.zulip_tools import get_tornado_ports
@@ -1156,6 +1156,15 @@ AUTH_LDAP_BIND_PASSWORD = get_secret("auth_ldap_bind_password", "")
 ########################################################################
 # MISC SETTINGS
 ########################################################################
+
+if get_config("zephyr", "personal_mirror_host", "") == "":
+    PERSONAL_ZMIRROR_SERVER: Optional[str] = None
+else:
+    PERSONAL_ZMIRROR_SERVER = (
+        get_config("zephyr", "personal_mirror_user", "zulip")
+        + "@"
+        + get_config("zephyr", "personal_mirror_host", "")
+    )
 
 if PRODUCTION:
     # Filter out user data
