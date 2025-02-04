@@ -49,4 +49,4 @@ API_FEATURE_LEVEL = 347  # Last bumped for /with/ in topic links.
 #   historical commits sharing the same major version, in which case a
 #   minor version bump suffices.
 
-PROVISION_VERSION = (311, 0)  # bumped 2024-01-29 to upgrade JavaScript dependencies
+PROVISION_VERSION = (311, 1)  # bumped 2024-02-04 to add memray

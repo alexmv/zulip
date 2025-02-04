@@ -32,6 +32,40 @@ from typing import Any
 import orjson
 from django.core.wsgi import get_wsgi_application
 
+memray_tracker = None
+request_count = 0
+try:
+    import uwsgi
+
+    from scripts.lib.zulip_tools import get_config, get_config_file
+
+    if (
+        get_config(get_config_file(), "application_server", "memory_profile_startup", False)
+        and uwsgi.worker_id() == 1
+    ):
+        import memray
+
+        memray_tracker = memray.Tracker(f"/tmp/memray-django-{uwsgi.masterpid()}-{os.getpid()}")  # noqa: S108
+        memray_tracker.__enter__()
+        print(f"Installed memray profiling on pid {os.getpid()}")
+
+        from django.core.signals import request_finished
+        from django.dispatch import receiver
+
+        def remove_memray(sender: Any, **kwargs: Any) -> None:
+            global memray_tracker
+            global request_count
+            request_count += 1
+            if memray_tracker is not None and request_count > 100:
+                memray_tracker.__exit__(None, None, None)
+                memray_tracker = None
+                print(f"Uninstalled memray profiling from pid {os.getpid()}")
+
+        receiver(request_finished)(remove_memray)
+
+except Exception as e:
+    print(f"Failed to profile memray: {e}")
+
 try:
     # This application object is used by any WSGI server configured to use this
     # file. This includes Django's development server, if the WSGI_APPLICATION

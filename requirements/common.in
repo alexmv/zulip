@@ -198,3 +198,6 @@ annotated_types
 
 # For requesting LLM API endpoints.
 litellm
+
+# For memory profiling
+memray
