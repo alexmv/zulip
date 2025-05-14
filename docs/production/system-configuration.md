@@ -194,13 +194,9 @@ there.
 
 [s3-backend]: upload-backends.md
 
-#### `uwsgi_listen_backlog_limit`
+#### `granian_workers`
 
-Override the default uwsgi backlog of 128 connections.
-
-#### `uwsgi_processes`
-
-Override the default `uwsgi` (Django) process count. It defaults to a sliding
+Override the default `granain` (Django) worker count. It defaults to a sliding
 scale between 3 workers for hosts with under 3GB RAM, up to 16 workers for hosts
 with more than 24GB of RAM.
 

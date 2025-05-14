@@ -1,0 +1,2 @@
+proxy_pass http://django;
+include /etc/nginx/zulip-include/proxy;

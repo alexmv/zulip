@@ -31,6 +31,8 @@ STATIC_URL: str | None = None
 # Extra HTTP "Host" values to allow (standard ones added in computed_settings.py)
 ALLOWED_HOSTS: list[str] = []
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # Basic email settings
 NOREPLY_EMAIL_ADDRESS = Address(username="noreply", domain=EXTERNAL_HOST_WITHOUT_PORT).addr_spec
 ADD_TOKENS_TO_NOREPLY_ADDRESS = True

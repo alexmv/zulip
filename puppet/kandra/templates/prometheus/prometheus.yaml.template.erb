@@ -108,29 +108,6 @@ scrape_configs:
         replacement: "${1}"
         target_label: "deploy"
 
-  - job_name: "uwsgi"
-    ec2_sd_configs:
-      - region: us-east-1
-        port: 9238
-        filters:
-          - name: "tag:role"
-            values: ["prod_app_frontend", "staging_app_frontend"]
-          - name: instance-state-name
-            values: ["running"]
-    static_configs:
-      - targets: ["<%= @czo %>:9238"]
-        labels:
-          deploy: prod
-          instance: <%= @czo %>
-    relabel_configs:
-      - source_labels: ["__meta_ec2_tag_Name"]
-        regex: "(.+)"
-        target_label: "instance"
-      - source_labels: ["__meta_ec2_tag_role"]
-        regex: "(prod|staging)_app_frontend"
-        replacement: "${1}"
-        target_label: "deploy"
-
   - job_name: "rabbitmq"
     ec2_sd_configs:
       - region: us-east-1

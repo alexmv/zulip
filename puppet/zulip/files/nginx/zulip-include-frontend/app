@@ -90,7 +90,7 @@ location /api/v1/tus {
 
 # Send everything else to Django via uWSGI
 location / {
-    include uwsgi_params;
+    include django_server;
 }
 
 # These Django routes not under /api are shared between mobile and
@@ -101,17 +101,17 @@ location / {
 location /thumbnail {
     include /etc/nginx/zulip-include/api_headers;
 
-    include uwsgi_params;
+    include django_server;
 }
 location /avatar {
     include /etc/nginx/zulip-include/api_headers;
 
-    include uwsgi_params;
+    include django_server;
 }
 location /user_uploads {
     include /etc/nginx/zulip-include/api_headers;
 
-    include uwsgi_params;
+    include django_server;
 }
 
 location /api/internal/ {
@@ -121,14 +121,14 @@ location /api/internal/ {
     deny all;
 
     include /etc/nginx/zulip-include/api_headers;
-    include uwsgi_params;
+    include django_server;
 }
 
 # Send all API routes not covered above to Django via uWSGI
 location /api/ {
     include /etc/nginx/zulip-include/api_headers;
 
-    include uwsgi_params;
+    include django_server;
 }
 
 include /etc/nginx/zulip-include/app.d/*.conf;

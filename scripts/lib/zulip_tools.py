@@ -311,7 +311,7 @@ def get_recent_deployments(threshold_days: int | None) -> set[str]:
         for dir_name in os.listdir(DEPLOYMENTS_DIR):
             target_dir = os.path.join(DEPLOYMENTS_DIR, dir_name)
             if not os.path.isdir(target_dir):
-                # Skip things like uwsgi sockets, symlinks, etc.
+                # Skip things like symlinks, etc.
                 continue
             if not os.path.exists(os.path.join(target_dir, "zerver")):
                 # Skip things like "lock" that aren't actually a deployment directory

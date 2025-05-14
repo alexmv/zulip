@@ -67,14 +67,15 @@ class zulip::nginx {
     content => template('zulip/nginx/trusted-proto.template.erb'),
   }
 
-  file { '/etc/nginx/uwsgi_params':
+  file { '/etc/nginx/django_server':
+    # XXX put in a reasonable place
     ensure  => file,
     require => Package[$zulip::common::nginx],
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
     notify  => Service['nginx'],
-    source  => 'puppet:///modules/zulip/nginx/uwsgi_params',
+    source  => 'puppet:///modules/zulip/nginx/django_server',
   }
 
   file { '/etc/nginx/sites-enabled/default':

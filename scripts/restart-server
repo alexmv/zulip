@@ -195,30 +195,21 @@ if has_application_server():
     if (
         action == "restart"
         and not args.less_graceful
-        and get_config(config_file, "application_server", "rolling_restart", False)
-        and os.path.exists("/home/zulip/deployments/uwsgi-control")
     ):
         # See if it's currently running
-        uwsgi_status = subprocess.run(
+        django_status = subprocess.run(
             ["supervisorctl", "status", "zulip-django"],
             stdout=subprocess.DEVNULL,
             check=False,
         )
-        if uwsgi_status.returncode == 0:
+        if django_status.returncode == 0:
             logging.info("Starting rolling restart of django server")
-            with contextlib.suppress(FileNotFoundError):
-                os.unlink("/var/lib/zulip/django-workers.ready")
-            with open("/home/zulip/deployments/uwsgi-control", "w") as control_socket:
-                # "c" is chain-reloading:
-                # https://uwsgi-docs.readthedocs.io/en/latest/MasterFIFO.html#available-commands
-                control_socket.write("c")
-            n = 0
-            while not os.path.exists("/var/lib/zulip/django-workers.ready"):
-                time.sleep(1)
-                n += 1
-                if n % 5 == 0:
-                    logging.info("...")
-            logging.info("Chain reloading complete")
+            django_signal = subprocess.run(
+                ["supervisorctl", "signal", "HUP", "zulip-django"],
+                stdout=subprocess.DEVNULL,
+                check=False,
+                # XXX TODO: Wait for restart to finish
+            )
         else:
             logging.info("Starting django server")
             subprocess.check_call(["supervisorctl", "start", "zulip-django"])

@@ -63,7 +63,7 @@ def get_deployments_to_be_purged(recent_deployments: set[str]) -> set[str]:
         # Deployments whose name is not in the format of a timestamp are
         # always included in the recent_deployments and are not deleted.
         if not os.path.isdir(deployment):
-            # Skip things like uwsgi sockets.
+            # Skip things like symlinks, etc.
             continue
         if not os.path.exists(os.path.join(deployment, "zerver")):
             # Skip things like "lock" that aren't actually a deployment directory

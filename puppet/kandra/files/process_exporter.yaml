@@ -4,7 +4,7 @@ process_names:
       - python3
     cmdline:
       - runtornado\s+127\.0\.0\.1:(?P<Port>\S+)
-  - name: "uwsgi-{{.Matches.Worker}}"
+  - name: "uwsgi-{{.Matches.Worker}}"  # XXX TODO
     comm:
       - uwsgi
     cmdline:

@@ -188,15 +188,12 @@ prod = [
 
   # For requesting LLM API endpoints.
   "litellm",
-
-  # Used for running the Zulip production Django server
-  "uwsgi",
-
   # Used for monitoring memcached
   "prometheus-client",
 
   # For captchas on unauth'd pages which can generate emails
   "altcha",
+  "granian>=2.2.6",
 ]
 docs = [
   # Needed to build RTD docs
@@ -407,7 +404,6 @@ module = [
     "tlds.*",
     "twitter.*",
     "two_factor.*",
-    "uwsgi",
 ]
 ignore_missing_imports = true
 

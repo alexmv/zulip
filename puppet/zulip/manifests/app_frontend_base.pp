@@ -169,15 +169,15 @@ class zulip::app_frontend_base {
   ]
 
   if $zulip::common::total_memory_mb > 24000 {
-    $uwsgi_default_processes = 16
+    $granian_default_workers = 16
   } elsif $zulip::common::total_memory_mb > 12000 {
-    $uwsgi_default_processes = 8
+    $granian_default_workers = 8
   } elsif $zulip::common::total_memory_mb > 6000 {
-    $uwsgi_default_processes = 6
+    $granian_default_workers = 6
   } elsif $zulip::common::total_memory_mb > 3000 {
-    $uwsgi_default_processes = 4
+    $granian_default_workers = 4
   } else {
-    $uwsgi_default_processes = 3
+    $granian_default_workers = 3
   }
 
   # Not the different naming scheme for sharded workers, where each gets its own queue,
@@ -207,6 +207,7 @@ class zulip::app_frontend_base {
   } else {
     $proxy = ''
   }
+  $granian_workers = zulipconf('application_server', 'granian_workers', $granian_default_workers)
   file { "${zulip::common::supervisor_conf_dir}/zulip.conf":
     ensure  => file,
     require => [Package[supervisor], Exec['stage_updated_sharding']],
@@ -217,23 +218,11 @@ class zulip::app_frontend_base {
     notify  => Service[$zulip::common::supervisor_service],
   }
 
-  $uwsgi_rolling_restart = zulipconf('application_server', 'rolling_restart', false)
-  $uwsgi_listen_backlog_limit = zulipconf('application_server', 'uwsgi_listen_backlog_limit', 128)
-  $uwsgi_processes = zulipconf('application_server', 'uwsgi_processes', $uwsgi_default_processes)
-  $somaxconn = 2 * Integer($uwsgi_listen_backlog_limit)
-  file { '/etc/zulip/uwsgi.ini':
-    ensure  => file,
-    require => Package[supervisor],
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0644',
-    content => template('zulip/uwsgi.ini.template.erb'),
-    notify  => Service[$zulip::common::supervisor_service],
-  }
-  zulip::sysctl { 'uwsgi':
+  zulip::sysctl { 'granian':
+    # XXX is this necessary?
     comment => 'Allow larger listen backlog',
     key     => 'net.core.somaxconn',
-    value   => $somaxconn,
+    value   => 2 * 1024,
   }
 
   file { [

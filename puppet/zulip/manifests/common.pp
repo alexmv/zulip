@@ -182,15 +182,6 @@ class zulip::common {
       },
     },
 
-    # https://github.com/timonwong/uwsgi_exporter/releases
-    'uwsgi_exporter' => {
-      'version' => '1.3.0',
-      'sha256'  => {
-        'amd64'   => 'f83411b508676237bbd1b791c1bdc043a68bf914c7e48e005e2e295255f9245f',
-        'aarch64' => 'ab7c9298d2fe5c5f58e3fe7c905929e93979d2b3b11c75eb8ba6ccc7a547238c',
-      },
-    },
-
     # https://vector.dev/download/
     'vector' => {
       'version' => '0.44.0',
