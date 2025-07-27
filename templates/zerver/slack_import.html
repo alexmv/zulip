@@ -32,8 +32,8 @@
                     </div>
                     <div class="input-box slack-import-extra-info">
                         <div class="not-editable-realm-field">
-                            {% trans %}
-                            Follow <a href="https://zulip.com/help//import-from-slack#export-your-slack-data:~:text=Export%20user%20data%20and%20custom%20emoji" rel="noopener noreferrer" target="_blank">these instructions</a> to obtain a <strong>Bot User OAuth Token</strong>.
+                            {% trans slack_instructions_link='href="https://zulip.com/help/import-from-slack#export-your-slack-data:~:text=Export%20user%20data%20and%20custom%20emoji" rel="noopener noreferrer" target="_blank"' %}
+                            <a {{slack_instructions_link}}>Follow these instructions</a> to obtain a <strong>Bot User OAuth Token</strong>.
                             {% endtrans %}
                         </div>
                     </div>
@@ -65,8 +65,8 @@
                 <div class="input-box" id="slack-import-drag-drop-wrapper">
                     <label for="slack-import-drag-and-drop" class="inline-block label-title">{{ _('Upload your Slack export file') }}</label>
                     <div class="not-editable-realm-field">
-                        {% trans %}
-                        Follow <a href="https://zulip.com/help/import-from-slack#export-your-slack-data" target="_blank" rel="noopener noreferrer">these instructions</a> to obtain your Slack message history export.
+                        {% trans slack_instructions_link='href="https://zulip.com/help/import-from-slack#export-your-slack-data" target="_blank" rel="noopener noreferrer"' %}
+                        <a {{slack_instructions_link}}>Follow these instructions</a> to obtain your Slack message history export.
                         {% endtrans %}
                     </div>
                     <div id="slack-import-drag-and-drop" data-max-file-size="{{max_file_size}}"></div>
