@@ -1559,11 +1559,15 @@ class ExternalAuthMethod(ABC):
 
     auth_backend_name = "undeclared"
     name = "undeclared"
-    display_icon: str | None = None
 
     # Used to determine how to order buttons on login form, backend with
     # higher sort order are displayed first.
     sort_order = 0
+
+    @classmethod
+    @abstractmethod
+    def display_icon(cls) -> str | None:
+        pass
 
     @classmethod
     @abstractmethod
@@ -1755,7 +1759,6 @@ class ZulipRemoteUserBackend(ZulipAuthMixin, RemoteUserBackend, ExternalAuthMeth
 
     auth_backend_name = "RemoteUser"
     name = "remoteuser"
-    display_icon = None
     # If configured, this backend should have its button near the top of the list.
     sort_order = 9000
 
@@ -1783,7 +1786,7 @@ class ZulipRemoteUserBackend(ZulipAuthMixin, RemoteUserBackend, ExternalAuthMeth
             dict(
                 name=cls.name,
                 display_name="SSO",
-                display_icon=cls.display_icon,
+                display_icon=cls.display_icon(),
                 # The user goes to the same URL for both login and signup:
                 login_url=reverse("start-login-sso"),
                 signup_url=reverse("start-login-sso"),
@@ -2501,7 +2504,7 @@ class SocialAuthMixin(ZulipAuthMixin, ExternalAuthMethod, BaseAuth):
             dict(
                 name=cls.name,
                 display_name=cls.auth_backend_name,
-                display_icon=cls.display_icon,
+                display_icon=cls.display_icon(),
                 login_url=reverse("login-social", args=(cls.name,)),
                 signup_url=reverse("signup-social", args=(cls.name,)),
             )
@@ -2513,7 +2516,11 @@ class GitHubAuthBackend(SocialAuthMixin, GithubOAuth2):
     name = "github"
     auth_backend_name = "GitHub"
     sort_order = 100
-    display_icon = staticfiles_storage.url("images/authentication_backends/github-icon.png")
+
+    @classmethod
+    @override
+    def display_icon(cls) -> str:
+        return staticfiles_storage.url("images/authentication_backends/github-icon.png")
 
     def get_all_associated_email_objects(self, *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
         access_token = kwargs["response"]["access_token"]
@@ -2618,7 +2625,6 @@ class AzureADAuthBackend(SocialAuthMixin, AzureADOAuth2):
     sort_order = 50
     name = "azuread-oauth2"
     auth_backend_name = "AzureAD"
-    display_icon = staticfiles_storage.url("images/authentication_backends/azuread-icon.png")
 
     available_for_cloud_plans = [
         Realm.PLAN_TYPE_STANDARD,
@@ -2626,13 +2632,17 @@ class AzureADAuthBackend(SocialAuthMixin, AzureADOAuth2):
         Realm.PLAN_TYPE_PLUS,
     ]
 
+    @classmethod
+    @override
+    def display_icon(cls) -> str:
+        return staticfiles_storage.url("images/authentication_backends/azuread-icon.png")
+
 
 @external_auth_method
 class GitLabAuthBackend(SocialAuthMixin, GitLabOAuth2):
     sort_order = 75
     name = "gitlab"
     auth_backend_name = "GitLab"
-    display_icon = staticfiles_storage.url("images/authentication_backends/gitlab-icon.png")
 
     # Note: GitLab as of early 2020 supports having multiple email
     # addresses connected with a GitLab account, and we could access
@@ -2642,13 +2652,22 @@ class GitLabAuthBackend(SocialAuthMixin, GitLabOAuth2):
     # we just use the primary email address, which is always verified.
     # (No code is required to do so, as that's the default behavior).
 
+    @classmethod
+    @override
+    def display_icon(cls) -> str:
+        return staticfiles_storage.url("images/authentication_backends/gitlab-icon.png")
+
 
 @external_auth_method
 class GoogleAuthBackend(SocialAuthMixin, GoogleOAuth2):
     sort_order = 150
     auth_backend_name = "Google"
     name = "google"
-    display_icon = staticfiles_storage.url("images/authentication_backends/googl_e-icon.png")
+
+    @classmethod
+    @override
+    def display_icon(cls) -> str:
+        return staticfiles_storage.url("images/authentication_backends/googl_e-icon.png")
 
     def get_verified_emails(self, *args: Any, **kwargs: Any) -> list[str]:
         verified_emails: list[str] = []
@@ -2679,7 +2698,6 @@ class AppleAuthBackend(SocialAuthMixin, AppleIdAuth):
     sort_order = 10
     name = "apple"
     auth_backend_name = "Apple"
-    display_icon = staticfiles_storage.url("images/authentication_backends/apple-icon.png")
 
     # Apple only sends `name` in its response the first time a user
     # tries to sign up, so we won't have it in consecutive attempts.
@@ -2689,6 +2707,11 @@ class AppleAuthBackend(SocialAuthMixin, AppleIdAuth):
     REDIS_EXPIRATION_SECONDS = 60 * 10
 
     SCOPE_SEPARATOR = "%20"  # https://github.com/python-social-auth/social-core/issues/470
+
+    @classmethod
+    @override
+    def display_icon(cls) -> str:
+        return staticfiles_storage.url("images/authentication_backends/apple-icon.png")
 
     @classmethod
     def check_config(cls) -> bool:
@@ -3027,8 +3050,6 @@ class SAMLAuthBackend(SocialAuthMixin, SAMLAuth):
     # to have it as their main authentication method, so it seems appropriate to have
     # SAML buttons at the top.
     sort_order = 9999
-    # There's no common default logo for SAML authentication.
-    display_icon = None
 
     # The full_name provided by the IdP is very likely the standard
     # employee directory name for the user, and thus what they and
@@ -3428,7 +3449,7 @@ class SAMLAuthBackend(SocialAuthMixin, SAMLAuth):
             saml_dict: ExternalAuthMethodDictT = dict(
                 name=f"saml:{idp_name}",
                 display_name=idp_dict.get("display_name", cls.auth_backend_name),
-                display_icon=idp_dict.get("display_icon", cls.display_icon),
+                display_icon=idp_dict.get("display_icon", cls.display_icon()),
                 login_url=reverse("login-social", args=("saml", idp_name)),
                 signup_url=reverse("signup-social", args=("saml", idp_name)),
             )
@@ -3487,7 +3508,6 @@ class GenericOpenIdConnectBackend(SocialAuthMixin, OpenIdConnectAuth):
     settings_dict: OIDCIdPConfigDict
     [settings_dict] = settings.SOCIAL_AUTH_OIDC_ENABLED_IDPS.values() or [OIDCIdPConfigDict()]
 
-    display_icon: str | None = settings_dict.get("display_icon", None)
     display_name: str = settings_dict.get("display_name", "OIDC")
 
     full_name_validated = getattr(settings, "SOCIAL_AUTH_OIDC_FULL_NAME_VALIDATED", False)
@@ -3495,6 +3515,12 @@ class GenericOpenIdConnectBackend(SocialAuthMixin, OpenIdConnectAuth):
     # Discovery endpoint for the superclass to read all the appropriate
     # configuration from.
     OIDC_ENDPOINT = settings_dict.get("oidc_url")
+
+    @classmethod
+    @override
+    def display_icon(cls) -> str | None:
+        [idp_config_dict] = settings.SOCIAL_AUTH_OIDC_ENABLED_IDPS.values()
+        return idp_config_dict.get("display_icon", None)
 
     @override
     def get_key_and_secret(self) -> tuple[str, str]:
@@ -3524,7 +3550,7 @@ class GenericOpenIdConnectBackend(SocialAuthMixin, OpenIdConnectAuth):
             dict(
                 name=f"oidc:{cls.name}",
                 display_name=cls.display_name,
-                display_icon=cls.display_icon,
+                display_icon=cls.display_icon(),
                 login_url=reverse("login-social", args=(cls.name,)),
                 signup_url=reverse("signup-social", args=(cls.name,)),
             )
