@@ -236,6 +236,9 @@ importers:
       prom-client:
         specifier: ^15.1.0
         version: 15.1.3
+      re2js:
+        specifier: ^1.2.0
+        version: 1.2.0
       regenerator-runtime:
         specifier: ^0.14.0
         version: 0.14.1
@@ -7785,6 +7788,9 @@ packages:
   raw-body@2.5.2:
     resolution: {integrity: sha512-8zGqypfENjCIqGhgXToC8aB2r7YrBX+AQAfIPs/Mlk+BtPTztOvTS01NRW/3Eh60J+a48lt8qsCzirQ6loCVfA==}
     engines: {node: '>= 0.8'}
+
+  re2js@1.2.0:
+    resolution: {integrity: sha512-IoeSIsrlUnaCBHCez7SAJvTB6Z6zb45aFgXs0q2owmnJZTXstbGhXqq4Ix+TV4jgtR5KcYa0NePNb5tF7V/SLg==}
 
   read-cache@1.0.0:
     resolution: {integrity: sha512-Owdv/Ft7IjOgm/i0xvNDZ1LrRANRfew4b2prF3OWMQLxLfu3bS8FVhCsrSCMK4lR56Y9ya+AThoTpDCTxCmpRA==}
@@ -18613,6 +18619,8 @@ snapshots:
       http-errors: 2.0.0
       iconv-lite: 0.4.24
       unpipe: 1.0.0
+
+  re2js@1.2.0: {}
 
   read-cache@1.0.0:
     dependencies:
