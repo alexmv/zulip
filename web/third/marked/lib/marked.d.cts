@@ -22,8 +22,8 @@ declare namespace marked {
     type LinkifierMatch = PrimitiveValue | PrimitiveValue[] | Record<string, PrimitiveValue>;
 
     type ParseOptions = {
-        get_linkifier_regexes: () => RegExp[];
-        linkifierHandler: (pattern: RegExp, matches: LinkifierMatch[]) => string;
+        get_linkifier_regexes: () => RE2JS[];
+        linkifierHandler: (pattern: RE2JS, matches: LinkifierMatch[]) => string;
         emojiHandler: (emoji_name: string) => string;
         unicodeEmojiHandler: (unicode_emoji: string) => string;
         streamHandler: (stream_name: string) => string | undefined;

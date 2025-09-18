@@ -262,7 +262,7 @@ export function build_page(): void {
             const url_template = String($("#linkifier_template").val()).trim();
 
             try {
-                linkifiers.python_to_js_linkifier(pattern, url_template);
+                linkifiers.compile_linkifier(pattern, url_template);
             } catch {
                 $add_linkifier_button.prop("disabled", false);
                 ui_report.error(
