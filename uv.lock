@@ -3497,6 +3497,22 @@ wheels = [
 ]
 
 [[package]]
+name = "pygithub"
+version = "2.8.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyjwt", extra = ["crypto"] },
+    { name = "pynacl" },
+    { name = "requests" },
+    { name = "typing-extensions" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c1/74/e560bdeffea72ecb26cff27f0fad548bbff5ecc51d6a155311ea7f9e4c4c/pygithub-2.8.1.tar.gz", hash = "sha256:341b7c78521cb07324ff670afd1baa2bf5c286f8d9fd302c1798ba594a5400c9", size = 2246994, upload-time = "2025-09-02T17:41:54.674Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/ba/7049ce39f653f6140aac4beb53a5aaf08b4407b6a3019aae394c1c5244ff/pygithub-2.8.1-py3-none-any.whl", hash = "sha256:23a0a5bca93baef082e03411bf0ce27204c32be8bfa7abc92fe4a3e132936df0", size = 432709, upload-time = "2025-09-02T17:41:52.947Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.2"
 source = { registry = "https://pypi.org/simple" }
@@ -5835,6 +5851,7 @@ dev = [
     { name = "pyasyncore" },
     { name = "pydantic" },
     { name = "pydantic-partials" },
+    { name = "pygithub" },
     { name = "pygments" },
     { name = "pyicu" },
     { name = "pyinotify" },
@@ -6064,6 +6081,7 @@ dev = [
     { name = "pyasyncore" },
     { name = "pydantic" },
     { name = "pydantic-partials" },
+    { name = "pygithub", specifier = ">=2.8.1" },
     { name = "pygments" },
     { name = "pyicu" },
     { name = "pyinotify" },

@@ -317,6 +317,9 @@ dev = [
 
   # For mocking time
   "time-machine",
+
+  # Making github API requests in tools
+  "pygithub>=2.8.1",
 ]
 
 [tool.uv]

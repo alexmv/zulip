@@ -1,0 +1,83 @@
+name: Notify of issues resolved in latest Zulip Cloud deploy
+
+on:
+  push:
+    branches:
+      - zulip-cloud-current
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  zulip-cloud-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Create cache directories
+        run: |
+          dirs=(/srv/zulip-emoji-cache)
+          sudo mkdir -p "${dirs[@]}"
+
+      - name: Restore pnpm store
+        uses: actions/cache@v4
+        with:
+          path: /__w/.pnpm-store
+          key: v1-pnpm-store-${{ matrix.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Restore uv cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ matrix.os }}-${{ hashFiles('uv.lock') }}
+          restore-keys: uv-${{ matrix.os }}-
+
+      - name: Restore emoji cache
+        uses: actions/cache@v4
+        with:
+          path: /srv/zulip-emoji-cache
+          key: v1-emoji-${{ matrix.os }}-${{ hashFiles('tools/setup/emoji/emoji_map.json', 'tools/setup/emoji/build_emoji', 'tools/setup/emoji/emoji_setup_utils.py', 'tools/setup/emoji/emoji_names.py', 'package.json') }}
+          restore-keys: v1-emoji-${{ matrix.os }}
+
+      - name: Install dependencies
+        run: |
+          ./tools/ci/setup-backend --skip-dev-db-build
+          scripts/lib/clean_unused_caches.py --verbose --threshold=0
+
+      - name: Generate list of resolved issues
+        id: generate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BASE="${{ github.event.before }}"
+          HEAD="${{ github.event.after }}"
+
+          source tools/ci/activate-venv
+          python3 ./tools/closed_by_commit.py "$BASE" "$HEAD" > release_notes.md
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Send to Zulip
+        uses: zulip/github-actions-zulip/send-message@v1
+        with:
+          api-key: ${{ secrets.ZULIP_BOT_KEY }}
+          email: "github-actions-bot@chat.zulip.org"
+          organization-url: "https://chat.zulip.org"
+          to: "test here"
+          topic: "latest deploy"
+          type: "stream"
+          content: ${{ steps.run_check.outputs.content }}
+
+      - name: Minimize uv cache
+        run: uv cache prune --ci
