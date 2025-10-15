@@ -12,11 +12,18 @@ class zulip::tornado_sharding {
     mode    => '0644',
     notify  => Service['nginx'],
     content => @(EOT),
+      upstream tornado {
+          server 127.0.0.1:9800;
+          keepalive 10000;
+      }
       map "" $tornado_server {
           default http://tornado;
       }
       | EOT
     replace => false,
+  }
+  file { '/etc/nginx/zulip-include/tornado-upstreams':
+    ensure => absent,
   }
   file { '/etc/zulip/nginx_sharding.conf':
     ensure => absent,
@@ -45,13 +52,4 @@ class zulip::tornado_sharding {
   # the zulip.conf configuration. Default is just port 9800.
   $tornado_groups = zulipconf_keys('tornado_sharding').map |$key| { $key.regsubst(/_regex$/, '').split('_') }.unique
   $tornado_ports = $tornado_groups.flatten.unique
-
-  file { '/etc/nginx/zulip-include/tornado-upstreams':
-    require => [Package[$zulip::common::nginx], Exec['stage_updated_sharding']],
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0644',
-    content => template('zulip/nginx/tornado-upstreams.conf.template.erb'),
-    notify  => Service['nginx'],
-  }
 }

@@ -40,12 +40,31 @@ def write_updated_configs() -> None:
         open("/etc/zulip/sharding.json.tmp", "w") as sharding_json_f,
     ):
         if len(ports) == 1:
+            nginx_sharding_conf_f.write("upstream tornado {\n")
+            nginx_sharding_conf_f.write(f"    server 127.0.0.1:{ports[0]};\n")
+            nginx_sharding_conf_f.write("    keepalive 10000;\n")
+            nginx_sharding_conf_f.write("}\n")
             nginx_sharding_conf_f.write('map "" $tornado_server {\n')
             nginx_sharding_conf_f.write("    default http://tornado;\n")
             nginx_sharding_conf_f.write("}\n")
             sharding_json_f.write("{}\n")
             return
 
+        for port in ports:
+            nginx_sharding_conf_f.write(f"upstream tornado{port} {{\n")
+            nginx_sharding_conf_f.write(f"    server 127.0.0.1:{port};\n")
+            nginx_sharding_conf_f.write("    keepalive 10000;\n")
+            nginx_sharding_conf_f.write("}\n")
+        port_keys = {key.removesuffix("_regex") for key in config_file["tornado_sharding"]}
+        port_groups = {tuple(key.split("_")) for key in port_keys if "_" in key}
+        for port_group in port_groups:
+            key = "_".join(port_group)
+            nginx_sharding_conf_f.write(f"upstream tornado{key} {{\n")
+            nginx_sharding_conf_f.write("    random;\n")
+            for port in port_group:
+                nginx_sharding_conf_f.write(f"    server 127.0.0.1:{port};\n")
+            nginx_sharding_conf_f.write("    keepalive 10000;\n")
+            nginx_sharding_conf_f.write("}\n")
         nginx_sharding_conf_f.write("map $host $tornado_server {\n")
         nginx_sharding_conf_f.write("    default http://tornado9800;\n")
         shard_map: dict[str, int | list[int]] = {}
