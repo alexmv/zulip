@@ -1,4 +1,12 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#   "requests",
+#   "PyGithub",
+# ]
+# [tool.uv]
+# exclude-newer = "2025-10-16T00:00:00Z"
+# ///
 
 import argparse
 import json
