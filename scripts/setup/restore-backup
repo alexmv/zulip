@@ -11,9 +11,18 @@ from typing import IO
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
-from scripts.lib.zulip_tools import assert_running_as_root, get_postgres_pwent, run, su_to_zulip
+from scripts.lib.zulip_tools import (
+    assert_running_as_root,
+    get_postgres_pwent,
+    get_zulip_pwent,
+    run,
+    su_to_zulip,
+)
 
-POSTGRES_PWENT = get_postgres_pwent()
+ROOT_UID = 0
+ZULIP_UID = get_zulip_pwent().pw_uid
+ZULIP_GID = get_zulip_pwent().pw_gid
+POSTGRES_UID = get_postgres_pwent().pw_uid
 
 parser = argparse.ArgumentParser()
 parser.add_argument("tarball", help="Filename of input tarball")
@@ -79,12 +88,10 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
         paths.append(("uploads", os.path.join(settings.DEPLOY_ROOT, settings.LOCAL_UPLOADS_DIR)))
 
     with tempfile.TemporaryDirectory(prefix="zulip-restore-backup-") as tmp:
-        uid = os.getuid()
-        gid = os.getgid()
-        with as_user(0):
+        with as_user(ROOT_UID):
             for name, path in paths:
                 os.makedirs(path, exist_ok=True)
-                os.chown(path, uid, gid)
+                os.chown(path, ZULIP_UID, ZULIP_GID)
 
         assert not any("|" in name or "|" in path for name, path in paths)
         transform_args = [
@@ -104,9 +111,9 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
         db = settings.DATABASES["default"]
         assert isinstance(db["NAME"], str)
         db_dir = os.path.join(tmp, "zulip-backup", "database")
-        with as_user(0):
-            run(["chown", "-R", POSTGRES_PWENT.pw_name, "--", tmp])
-        with as_user(POSTGRES_PWENT.pw_uid):
+        with as_user(ROOT_UID):
+            run(["chown", "-R", str(POSTGRES_UID), "--", tmp])
+        with as_user(POSTGRES_UID):
             postgresql_env = dict(os.environ)
             if db["HOST"] not in ["", "localhost"]:
                 postgresql_env["PGHOST"] = db["HOST"]
@@ -133,7 +140,7 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
             )
 
         if settings.PRODUCTION:
-            with as_user(0):
+            with as_user(ROOT_UID):
                 # In case we are restoring a backup from an older Zulip
                 # version, there may be new secrets to generate.
                 run(
@@ -157,7 +164,7 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
                 ],
                 text=True,
             ).strip()
-            with as_user(0):
+            with as_user(ROOT_UID):
                 if rabbitmq_host in ["127.0.0.1", "::1", "localhost", "localhost6"]:
                     run(
                         [
@@ -177,10 +184,10 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
         # Now, restore the database backup using pg_restore.  This
         # needs to run after zulip-puppet-apply to ensure full-text
         # search extensions are available and installed.
-        with as_user(POSTGRES_PWENT.pw_uid):
+        with as_user(POSTGRES_UID):
             run(["pg_restore", "--dbname=" + db["NAME"], "--", db_dir], cwd="/", env=postgresql_env)
-        with as_user(0):
-            run(["chown", "-R", str(uid), "--", tmp])
+        with as_user(ROOT_UID):
+            run(["chown", "-R", str(ZULIP_UID), "--", tmp])
 
         if settings.PRODUCTION:
             run([os.path.join(settings.DEPLOY_ROOT, "scripts", "restart-server")])
