@@ -108,6 +108,15 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
 
         db = settings.DATABASES["default"]
         assert isinstance(db["NAME"], str)
+
+        # Read the contents of terminate-psql-sessions, since the
+        # postgres user may not have access to it
+        terminate_path = os.path.join(
+            settings.DEPLOY_ROOT, "scripts", "setup", "terminate-psql-sessions"
+        )
+        with open(terminate_path, "rb") as fh:
+            terminate_script = fh.read()
+
         with as_user(POSTGRES_UID):
             postgresql_env = dict(os.environ)
             if db["HOST"] not in ["", "localhost"]:
@@ -119,14 +128,10 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
                     postgresql_env["PGPASSWORD"] = db["PASSWORD"]
 
             run(
-                [
-                    os.path.join(
-                        settings.DEPLOY_ROOT, "scripts", "setup", "terminate-psql-sessions"
-                    ),
-                    db["NAME"],
-                ],
+                ["bash", "-s", "-", db["NAME"]],
                 cwd="/",
                 env=postgresql_env,
+                input=terminate_script,
             )
             run(
                 ["dropdb", "--if-exists", "--", db["NAME"]],
