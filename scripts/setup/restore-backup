@@ -106,8 +106,6 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
         tarball_file.seek(0, 0)
         run(["tar", "-C", tmp, *transform_args, "-xPz"], stdin=tarball_file)
 
-        # Now, extract the database backup, destroy the old
-        # database, and create a new, empty database.
         db = settings.DATABASES["default"]
         assert isinstance(db["NAME"], str)
         with as_user(POSTGRES_UID):
