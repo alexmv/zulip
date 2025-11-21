@@ -125,9 +125,14 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
                     ),
                     db["NAME"],
                 ],
+                cwd="/",
                 env=postgresql_env,
             )
-            run(["dropdb", "--if-exists", "--", db["NAME"]], cwd="/", env=postgresql_env)
+            run(
+                ["dropdb", "--if-exists", "--", db["NAME"]],
+                cwd="/",
+                env=postgresql_env,
+            )
             run(
                 ["createdb", "--owner=zulip", "--template=template0", "--", db["NAME"]],
                 cwd="/",
