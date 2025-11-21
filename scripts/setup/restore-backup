@@ -5,6 +5,8 @@ import re
 import subprocess
 import sys
 import tempfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import IO
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,6 +23,16 @@ parser.add_argument(
 parser.add_argument(
     "--keep-zulipconf", help="Do not overwrite local /etc/zulip/zulip.conf", action="store_true"
 )
+
+
+@contextmanager
+def as_user(uid: int) -> Iterator[None]:
+    original_ruid, original_euid, original_suid = os.getresuid()
+    try:
+        os.setresuid(uid, uid, 0)
+        yield
+    finally:
+        os.setresuid(original_ruid, original_euid, original_suid)
 
 
 def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf: bool) -> None:
@@ -69,11 +81,10 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
     with tempfile.TemporaryDirectory(prefix="zulip-restore-backup-") as tmp:
         uid = os.getuid()
         gid = os.getgid()
-        os.setresuid(0, 0, 0)
-        for name, path in paths:
-            os.makedirs(path, exist_ok=True)
-            os.chown(path, uid, gid)
-        os.setresuid(uid, uid, 0)
+        with as_user(0):
+            for name, path in paths:
+                os.makedirs(path, exist_ok=True)
+                os.chown(path, uid, gid)
 
         assert not any("|" in name or "|" in path for name, path in paths)
         transform_args = [
@@ -93,43 +104,46 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
         db = settings.DATABASES["default"]
         assert isinstance(db["NAME"], str)
         db_dir = os.path.join(tmp, "zulip-backup", "database")
-        os.setresuid(0, 0, 0)
-        run(["chown", "-R", POSTGRES_PWENT.pw_name, "--", tmp])
-        os.setresuid(POSTGRES_PWENT.pw_uid, POSTGRES_PWENT.pw_uid, 0)
+        with as_user(0):
+            run(["chown", "-R", POSTGRES_PWENT.pw_name, "--", tmp])
+        with as_user(POSTGRES_PWENT.pw_uid):
+            postgresql_env = dict(os.environ)
+            if db["HOST"] not in ["", "localhost"]:
+                postgresql_env["PGHOST"] = db["HOST"]
+                if "PORT" in db:
+                    postgresql_env["PGPORT"] = db["PORT"]
+                postgresql_env["PGUSER"] = db["USER"]
+                if "PASSWORD" in db:
+                    postgresql_env["PGPASSWORD"] = db["PASSWORD"]
 
-        postgresql_env = dict(os.environ)
-        if db["HOST"] not in ["", "localhost"]:
-            postgresql_env["PGHOST"] = db["HOST"]
-            if "PORT" in db:
-                postgresql_env["PGPORT"] = db["PORT"]
-            postgresql_env["PGUSER"] = db["USER"]
-            if "PASSWORD" in db:
-                postgresql_env["PGPASSWORD"] = db["PASSWORD"]
-
-        run(
-            [
-                os.path.join(settings.DEPLOY_ROOT, "scripts", "setup", "terminate-psql-sessions"),
-                db["NAME"],
-            ],
-            env=postgresql_env,
-        )
-        run(["dropdb", "--if-exists", "--", db["NAME"]], cwd="/", env=postgresql_env)
-        run(
-            ["createdb", "--owner=zulip", "--template=template0", "--", db["NAME"]],
-            cwd="/",
-            env=postgresql_env,
-        )
-        os.setresuid(0, 0, 0)
-
-        if settings.PRODUCTION:
-            # In case we are restoring a backup from an older Zulip
-            # version, there may be new secrets to generate.
             run(
                 [
-                    os.path.join(settings.DEPLOY_ROOT, "scripts", "setup", "generate_secrets.py"),
-                    "--production",
-                ]
+                    os.path.join(
+                        settings.DEPLOY_ROOT, "scripts", "setup", "terminate-psql-sessions"
+                    ),
+                    db["NAME"],
+                ],
+                env=postgresql_env,
             )
+            run(["dropdb", "--if-exists", "--", db["NAME"]], cwd="/", env=postgresql_env)
+            run(
+                ["createdb", "--owner=zulip", "--template=template0", "--", db["NAME"]],
+                cwd="/",
+                env=postgresql_env,
+            )
+
+        if settings.PRODUCTION:
+            with as_user(0):
+                # In case we are restoring a backup from an older Zulip
+                # version, there may be new secrets to generate.
+                run(
+                    [
+                        os.path.join(
+                            settings.DEPLOY_ROOT, "scripts", "setup", "generate_secrets.py"
+                        ),
+                        "--production",
+                    ]
+                )
 
             # If there is a local RabbitMQ, we need to reconfigure it
             # to ensure the RabbitMQ password matches the value in the
@@ -143,24 +157,30 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
                 ],
                 text=True,
             ).strip()
-            if rabbitmq_host in ["127.0.0.1", "::1", "localhost", "localhost6"]:
-                run([os.path.join(settings.DEPLOY_ROOT, "scripts", "setup", "configure-rabbitmq")])
+            with as_user(0):
+                if rabbitmq_host in ["127.0.0.1", "::1", "localhost", "localhost6"]:
+                    run(
+                        [
+                            os.path.join(
+                                settings.DEPLOY_ROOT, "scripts", "setup", "configure-rabbitmq"
+                            )
+                        ]
+                    )
 
-            # In production, we also need to do a `zulip-puppet-apply`
-            # in order to apply any configuration from
-            # /etc/zulip/zulip.conf to this system, since it was
-            # originally installed without the restored copy of that
-            # file.
-            run([os.path.join(settings.DEPLOY_ROOT, "scripts", "zulip-puppet-apply"), "-f"])
+                # In production, we also need to do a `zulip-puppet-apply`
+                # in order to apply any configuration from
+                # /etc/zulip/zulip.conf to this system, since it was
+                # originally installed without the restored copy of that
+                # file.
+                run([os.path.join(settings.DEPLOY_ROOT, "scripts", "zulip-puppet-apply"), "-f"])
 
         # Now, restore the database backup using pg_restore.  This
         # needs to run after zulip-puppet-apply to ensure full-text
         # search extensions are available and installed.
-        os.setresuid(POSTGRES_PWENT.pw_uid, POSTGRES_PWENT.pw_uid, 0)
-        run(["pg_restore", "--dbname=" + db["NAME"], "--", db_dir], cwd="/", env=postgresql_env)
-        os.setresuid(0, 0, 0)
-        run(["chown", "-R", str(uid), "--", tmp])
-        os.setresuid(uid, uid, 0)
+        with as_user(POSTGRES_PWENT.pw_uid):
+            run(["pg_restore", "--dbname=" + db["NAME"], "--", db_dir], cwd="/", env=postgresql_env)
+        with as_user(0):
+            run(["chown", "-R", str(uid), "--", tmp])
 
         if settings.PRODUCTION:
             run([os.path.join(settings.DEPLOY_ROOT, "scripts", "restart-server")])
