@@ -110,9 +110,6 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
         # database, and create a new, empty database.
         db = settings.DATABASES["default"]
         assert isinstance(db["NAME"], str)
-        db_dir = os.path.join(tmp, "zulip-backup", "database")
-        with as_user(ROOT_UID):
-            run(["chown", "-R", str(POSTGRES_UID), "--", tmp])
         with as_user(POSTGRES_UID):
             postgresql_env = dict(os.environ)
             if db["HOST"] not in ["", "localhost"]:
@@ -184,6 +181,9 @@ def restore_backup(tarball_file: IO[bytes], keep_settings: bool, keep_zulipconf:
         # Now, restore the database backup using pg_restore.  This
         # needs to run after zulip-puppet-apply to ensure full-text
         # search extensions are available and installed.
+        db_dir = os.path.join(tmp, "zulip-backup", "database")
+        with as_user(ROOT_UID):
+            run(["chown", "-R", str(POSTGRES_UID), "--", tmp])
         with as_user(POSTGRES_UID):
             run(["pg_restore", "--dbname=" + db["NAME"], "--", db_dir], cwd="/", env=postgresql_env)
         with as_user(ROOT_UID):
