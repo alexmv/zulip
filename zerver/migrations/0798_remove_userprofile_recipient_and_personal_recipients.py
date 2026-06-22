@@ -4,7 +4,7 @@ from django.db.migrations.state import StateApps
 from psycopg2.sql import SQL
 
 PERSONAL_RECIPIENT_TYPE = 1
-BATCH_SIZE = 5000
+BATCH_SIZE = 1000
 
 
 def delete_personal_recipient_data(
@@ -17,6 +17,14 @@ def delete_personal_recipient_data(
     deleting whatever rows remain.
     """
     with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT COUNT(*) FROM zerver_recipient WHERE type = %s",
+            [PERSONAL_RECIPIENT_TYPE],
+        )
+        (total,) = cursor.fetchone()
+        print()
+        print(f"Deleting {total} personal recipients and their subscriptions...")
+
         while True:
             cursor.execute(
                 SQL(
@@ -35,6 +43,7 @@ def delete_personal_recipient_data(
             if cursor.rowcount == 0:
                 break
 
+        deleted = 0
         while True:
             cursor.execute(
                 SQL(
@@ -51,6 +60,8 @@ def delete_personal_recipient_data(
             )
             if cursor.rowcount == 0:
                 break
+            deleted += cursor.rowcount
+            print(f"  Deleted {deleted}/{total} personal recipients.")
 
 
 class Migration(migrations.Migration):
