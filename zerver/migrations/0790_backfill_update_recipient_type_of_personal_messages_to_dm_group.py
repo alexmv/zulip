@@ -102,7 +102,7 @@ def backfill_update_recipient_type_of_personal_messages_to_dm_group(
         cursor.execute(
             "CREATE TEMP TABLE personal_recipients_to_process AS "
             "SELECT r.id, type_id FROM zerver_recipient r "
-            "JOIN zerver_userprofile u ON u.id = r.type_id "
+            "LEFT JOIN zerver_userprofile u ON u.id = r.type_id "
             "WHERE r.type = %s AND ("
             "  EXISTS (SELECT 1 FROM zerver_message WHERE recipient_id = r.id)"
             "  OR EXISTS (SELECT 1 FROM zerver_archivedmessage WHERE recipient_id = r.id)"
